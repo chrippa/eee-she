@@ -1,13 +1,23 @@
 CFLAGS += -g
 PREFIX = /usr
 
-all: eee-she
-eee-she: eee-she.o
-clean:
-	$(RM) *.o eee-she
+SRC = eee-she.c
+OBJ = ${SRC:.c=.o}
 
-install:
-	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
-	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f eee-she ${DESTDIR}${PREFIX}/bin
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/eee-she
+all: eee-she
+
+.c.o:
+	@echo CC $<
+	@${CC} -c ${CFLAGS} $<
+
+eee-she: ${OBJ}
+	@echo CC -o $@
+	@${CC} -o $@ ${OBJ} ${LDFLAGS}
+
+clean:
+	@echo CLEAN ${OBJ} eee-she
+	@$(RM) ${OBJ} eee-she
+
+install: all
+	@echo INSTALL ${DESTDIR}${PREFIX}/bin/eee-she
+	@install -D eee-she ${DESTDIR}${PREFIX}/bin/eee-she
