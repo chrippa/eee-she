@@ -78,10 +78,19 @@ static int
 cpufv_get (void)
 {
 	FILE *f;
+	char buf[10];
 	int mode;
 
 	f = fopen2(g_cpufv_path, "r");
-	fscanf(f, "%d", &mode);
+
+	fscanf(f, "%s", &buf);
+
+	/* Handle hex string on kernel >= 2.6.31 */
+	if (strncmp(buf, "0x", 2) == 0)
+		mode = strtol(buf + 2, NULL, 16);
+	else
+		mode = atoi(buf);
+
 	fclose(f);
 
 	return mode;
