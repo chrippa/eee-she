@@ -6,6 +6,7 @@
 
 #define CPUFV_PATH1 "/sys/devices/platform/eeepc/cpufv"
 #define CPUFV_PATH2 "/sys/devices/platform/eeepc/she"
+#define CPUFV_PATH3 "/sys/devices/platform/eeepc-wmi/cpufv"
 
 #define STREQ(s1, s2) (strcmp(s1, s2) == 0)
 
@@ -130,34 +131,45 @@ show_help (void)
 int
 main (int argc, char **argv)
 {
-	char *cmd = argv[1];
-	int mode;
+	const char *cmd = argv[1];
+	int mode, writeonly;
 
 	/* Check that file exists */
-	if (access(CPUFV_PATH1, F_OK) == 0)
+	if (access(CPUFV_PATH1, F_OK) == 0) {
 		strcpy(g_cpufv_path, CPUFV_PATH1);
-	else if (access(CPUFV_PATH2, F_OK) == 0)
+	} else if (access(CPUFV_PATH2, F_OK) == 0) {
 		strcpy(g_cpufv_path, CPUFV_PATH2);
-	else {
-		fprintf(stderr, "Unable open file, make sure eeepc_laptop module is loaded\n");
+	} else if (access(CPUFV_PATH3, F_OK) == 0) {
+		strcpy(g_cpufv_path, CPUFV_PATH3);
+		writeonly = 1;
+	} else {
+		fprintf(stderr, "Unable open file, make sure eeepc_laptop/eeepc_wmi module is loaded\n");
 
 		return EXIT_FAILURE;
 	}
 
 	/* Handle commands */
-	if (argc < 2)
+	if (argc < 2) {
 		show_help();
+	}
 
-	if (STREQ(cmd, "-p") || STREQ(cmd, "--performance"))
+	if (STREQ(cmd, "-p") || STREQ(cmd, "--performance")) {
 		mode = PERFORMANCE;
-	else if (STREQ(cmd, "-n") || STREQ(cmd, "--normal"))
+	} else if (STREQ(cmd, "-n") || STREQ(cmd, "--normal")) {
 		mode = NORMAL;
-	else if (STREQ(cmd, "-ps") || STREQ(cmd, "--powersave"))
+	} else if (STREQ(cmd, "-ps") || STREQ(cmd, "--powersave")) {
 		mode = POWERSAVE;
-	else if (STREQ(cmd, "-t") || STREQ(cmd, "--toggle"))
-		mode = cpufv_toggle();
-	else
+	} else if (STREQ(cmd, "-t") || STREQ(cmd, "--toggle")) {
+		if (writeonly == 1) {
+			fprintf(stderr, "%s is write only. Cannot read current mode.\n", g_cpufv_path);
+
+			return EXIT_FAILURE;
+		} else {
+			mode = cpufv_toggle();
+		}
+	} else {
 		show_help();
+	}
 
 	cpufv_set(mode);
 	cpufv_print(mode);
